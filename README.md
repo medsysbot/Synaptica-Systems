@@ -36,7 +36,7 @@ Iniciá la aplicación con:
 ```bash
 uvicorn app.synaptica_main:app --host 0.0.0.0 --port 7860
 ```
-Luego ingresá en `http://localhost:7860/public/synaptica-tester.html` para ver la interfaz de prueba.
+Luego ingresá en `http://localhost:7860/` para ver la interfaz de prueba.
 
 ## Despliegue en Railway
 
@@ -47,7 +47,7 @@ Luego ingresá en `http://localhost:7860/public/synaptica-tester.html` para ver 
    ```bash
    uvicorn app.synaptica_main:app --host=0.0.0.0 --port=7860
    ```
-5. Despliega y verifica el servicio.
+5. Despliega y verifica el servicio. Una vez activo, accedé a `https://tu-proyecto.up.railway.app/` para utilizar el tester.
 
 ## Estructura
 
