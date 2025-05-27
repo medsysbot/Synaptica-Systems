@@ -29,7 +29,6 @@
     <div id="session-message"></div>
 
     <button id="start-test">Iniciar Test</button>
-    <iframe id="medsys-frame" style="display:none;"></iframe>
 
     <h2>Resultado</h2>
     <div id="console"></div>
@@ -37,7 +36,6 @@
 
 <script>
 const consoleArea = document.getElementById('console');
-const iframe = document.getElementById('medsys-frame');
 let results = [];
 let baseUrl = '';
 
@@ -46,26 +44,14 @@ function logResult(text) {
     consoleArea.textContent += text + '\n';
 }
 
-
-async function checkSession(base) {
-    try {
-        const resp = await fetch(base, { credentials: 'include' });
-        return resp.ok;
-    } catch {
-        return false;
-    }
+function mostrarError(msg) {
+    document.getElementById('session-message').textContent = msg;
 }
 
-async function runTests() {
+async function iniciarPruebas() {
     baseUrl = document.getElementById('medsys-url').value.trim();
     if (!baseUrl) {
-        alert('Ingresá la URL de MedSys');
-        return;
-    }
-    iframe.src = baseUrl;
-    const logged = await checkSession(baseUrl);
-    if (!logged) {
-        document.getElementById('session-message').textContent = 'Debe iniciar sesión en otra pestaña antes de ejecutar las pruebas';
+        mostrarError('Ingresá la URL de MedSys');
         return;
     }
     document.getElementById('session-message').textContent = '';
@@ -76,6 +62,23 @@ async function runTests() {
     await testHistoria(baseUrl);
     await testReceta(baseUrl);
     logResult('Pruebas finalizadas');
+}
+
+function verificarSesion() {
+  fetch("https://medixis-production.up.railway.app/index", {
+    method: "GET",
+    credentials: "include"
+  })
+  .then(res => {
+    if (res.ok) {
+      iniciarPruebas();
+    } else {
+      mostrarError("Debe iniciar sesión en otra pestaña.");
+    }
+  })
+  .catch(() => {
+    mostrarError("No se pudo verificar la sesión.");
+  });
 }
 
 async function testRegistro(base) {
@@ -130,7 +133,7 @@ function exportReport() {
     link.click();
 }
 
-document.getElementById('start-test').addEventListener('click', runTests);
+document.getElementById('start-test').addEventListener('click', verificarSesion);
 document.getElementById('export-report').addEventListener('click', exportReport);
 </script>
 </body>
