@@ -58,10 +58,10 @@ async function iniciarPruebas() {
     document.getElementById('session-message').textContent = '';
     consoleArea.textContent = '';
     results = [];
-    await testRegistro(baseUrl);
-    await testEvolucion(baseUrl);
-    await testHistoria(baseUrl);
-    await testReceta(baseUrl);
+    await testRegistro();
+    await testEvolucion();
+    await testHistoria();
+    await testReceta();
     logResult('Pruebas finalizadas');
 }
 
@@ -90,44 +90,73 @@ function verificarSesion() {
     };
 }
 
-async function testRegistro(base) {
+async function esperar(ms) {
+    return new Promise(r => setTimeout(r, ms));
+}
+
+async function cargarEnIframe(ruta) {
+    return new Promise((resolve, reject) => {
+        const frame = document.getElementById('medsys-frame');
+        frame.src = baseUrl + ruta;
+        frame.onload = () => resolve();
+    });
+}
+
+async function testRegistro() {
     try {
         logResult('Iniciando prueba de Registro...');
-        const resp = await fetch(base + '/registro', { credentials: 'include' });
-        if (!resp.ok) throw new Error('No se pudo acceder');
+        await cargarEnIframe('/registro');
+        const doc = document.getElementById('medsys-frame').contentDocument ||
+                    document.getElementById('medsys-frame').contentWindow.document;
+        doc.querySelector('#dni').value = '12345678';
+        doc.querySelector('#nombre').value = 'TEST';
+        doc.querySelector('#guardar').click();
+        await esperar(1000);
         logResult('\u2714\ufe0f Registro: OK');
     } catch (err) {
         logResult('\u274c Registro: ' + err.message);
     }
 }
 
-async function testEvolucion(base) {
+async function testEvolucion() {
     try {
         logResult('Iniciando prueba de Evoluci\u00f3n...');
-        const resp = await fetch(base + '/evolucion', { credentials: 'include' });
-        if (!resp.ok) throw new Error('No se pudo acceder');
+        await cargarEnIframe('/evolucion');
+        const doc = document.getElementById('medsys-frame').contentDocument ||
+                    document.getElementById('medsys-frame').contentWindow.document;
+        doc.querySelector('#diagnostico').value = 'Test automatizado';
+        doc.querySelector('#guardar').click();
+        await esperar(1000);
         logResult('\u2714\ufe0f Evoluci\u00f3n: OK');
     } catch (err) {
         logResult('\u274c Evoluci\u00f3n: ' + err.message);
     }
 }
 
-async function testHistoria(base) {
+async function testHistoria() {
     try {
         logResult('Iniciando prueba de Historia...');
-        const resp = await fetch(base + '/historia', { credentials: 'include' });
-        if (!resp.ok) throw new Error('No se pudo acceder');
+        await cargarEnIframe('/historia');
+        const doc = document.getElementById('medsys-frame').contentDocument ||
+                    document.getElementById('medsys-frame').contentWindow.document;
+        doc.querySelector('#observaciones').value = 'Historia automatizada';
+        doc.querySelector('#guardar').click();
+        await esperar(1000);
         logResult('\u2714\ufe0f Historia: OK');
     } catch (err) {
         logResult('\u274c Historia: ' + err.message);
     }
 }
 
-async function testReceta(base) {
+async function testReceta() {
     try {
         logResult('Iniciando prueba de Receta...');
-        const resp = await fetch(base + '/receta', { credentials: 'include' });
-        if (!resp.ok) throw new Error('No se pudo acceder');
+        await cargarEnIframe('/receta');
+        const doc = document.getElementById('medsys-frame').contentDocument ||
+                    document.getElementById('medsys-frame').contentWindow.document;
+        doc.querySelector('#medicacion').value = 'Paracetamol';
+        doc.querySelector('#guardar').click();
+        await esperar(1000);
         logResult('\u2714\ufe0f Receta: OK');
     } catch (err) {
         logResult('\u274c Receta: ' + err.message);
