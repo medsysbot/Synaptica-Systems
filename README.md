@@ -1,4 +1,3 @@
-# Syn-ptica-Systems
 # Synaptica Systems
 
 Plataforma base de desarrollo e inteligencia para sistemas médicos como Medixis.
