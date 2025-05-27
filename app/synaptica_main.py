@@ -23,7 +23,5 @@ def saludo() -> dict:
 
 
 @app.get("/")
-def serve_index() -> FileResponse:
-    """Devuelve la interfaz principal del tester."""
-    ruta = os.path.join("public", "synaptica-tester.html")
-    return FileResponse(ruta, media_type="text/html")
+def serve_tester() -> FileResponse:
+    return FileResponse(os.path.join("public", "synaptica-tester.html"), media_type="text/html")
