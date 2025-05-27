@@ -27,6 +27,7 @@
         <input id="medsys-url" type="text" placeholder="https://midominio.com/index" size="40">
     </label>
     <div id="session-message"></div>
+    <iframe id="medsys-frame" src="" style="width:100%; height:500px; border:1px solid #ccc;"></iframe>
 
     <button id="start-test">Iniciar Test</button>
 
@@ -65,20 +66,28 @@ async function iniciarPruebas() {
 }
 
 function verificarSesion() {
-  fetch("https://medixis-production.up.railway.app/index", {
-    method: "GET",
-    credentials: "include"
-  })
-  .then(res => {
-    if (res.ok) {
-      iniciarPruebas();
-    } else {
-      mostrarError("Debe iniciar sesión en otra pestaña.");
+    baseUrl = document.getElementById('medsys-url').value.trim();
+    if (!baseUrl) {
+        mostrarError('Ingresá la URL de MedSys');
+        return;
     }
-  })
-  .catch(() => {
-    mostrarError("No se pudo verificar la sesión.");
-  });
+    document.getElementById('session-message').textContent = 'Verificando sesión...';
+    const frame = document.getElementById('medsys-frame');
+    frame.src = baseUrl;
+    frame.onload = () => {
+        let finalUrl = '';
+        try {
+            finalUrl = frame.contentWindow.location.href;
+        } catch (err) {
+            finalUrl = frame.src;
+        }
+        if (finalUrl.includes('login')) {
+            mostrarError('Debe iniciar sesión en otra pestaña.');
+        } else {
+            document.getElementById('session-message').textContent = '';
+            iniciarPruebas();
+        }
+    };
 }
 
 async function testRegistro(base) {
