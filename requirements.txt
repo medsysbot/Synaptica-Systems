@@ -1,2 +1,10 @@
 requests
+fastapi
+uvicorn
 python-dotenv
+fpdf
+email-validator
+supabase-py
+jinja2
+aiofiles
+httpx
