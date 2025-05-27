@@ -3,9 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <title>Synaptica Systems Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2em;
+        }
+        #console {
+            background: #f5f5f5;
+            border: 1px solid #ccc;
+            padding: 1em;
+            white-space: pre-wrap;
+            height: 200px;
+            overflow-y: auto;
+        }
+        label, input, button {
+            margin-top: 0.5em;
+        }
+    </style>
 </head>
 <body>
-    <h1>Tester de Synaptica Systems</h1>
-    <p>Esta es una interfaz básica para las pruebas de MedSys.</p>
+    <h1>Tester Automático de Synaptica Systems</h1>
+    <label>URL de MedSys:
+        <input id="medsys-url" type="text" placeholder="https://midominio.com" size="40">
+    </label>
+    <button id="start-test">Iniciar Test</button>
+
+    <h2>Resultado</h2>
+    <div id="console"></div>
+    <button id="export-report">Exportar reporte (.txt)</button>
+
+<script>
+const consoleArea = document.getElementById('console');
+let results = [];
+
+function logResult(text) {
+    results.push(text);
+    consoleArea.textContent += text + '\n';
+}
+
+async function runTests() {
+    const baseUrl = document.getElementById('medsys-url').value.trim();
+    if (!baseUrl) {
+        alert('Ingresá la URL de MedSys');
+        return;
+    }
+    consoleArea.textContent = '';
+    results = [];
+    await testRegistro(baseUrl);
+    await testEvolucion(baseUrl);
+    await testHistoria(baseUrl);
+    await testReceta(baseUrl);
+    logResult('Pruebas finalizadas');
+}
+
+async function testRegistro(base) {
+    try {
+        logResult('Iniciando prueba de Registro...');
+        const resp = await fetch(base + '/registro');
+        if (!resp.ok) throw new Error('No se pudo acceder');
+        logResult('\u2714\ufe0f Registro: OK');
+    } catch (err) {
+        logResult('\u274c Registro: ' + err.message);
+    }
+}
+
+async function testEvolucion(base) {
+    try {
+        logResult('Iniciando prueba de Evoluci\u00f3n...');
+        const resp = await fetch(base + '/evolucion');
+        if (!resp.ok) throw new Error('No se pudo acceder');
+        logResult('\u2714\ufe0f Evoluci\u00f3n: OK');
+    } catch (err) {
+        logResult('\u274c Evoluci\u00f3n: ' + err.message);
+    }
+}
+
+async function testHistoria(base) {
+    try {
+        logResult('Iniciando prueba de Historia...');
+        const resp = await fetch(base + '/historia');
+        if (!resp.ok) throw new Error('No se pudo acceder');
+        logResult('\u2714\ufe0f Historia: OK');
+    } catch (err) {
+        logResult('\u274c Historia: ' + err.message);
+    }
+}
+
+async function testReceta(base) {
+    try {
+        logResult('Iniciando prueba de Receta...');
+        const resp = await fetch(base + '/receta');
+        if (!resp.ok) throw new Error('No se pudo acceder');
+        logResult('\u2714\ufe0f Receta: OK');
+    } catch (err) {
+        logResult('\u274c Receta: ' + err.message);
+    }
+}
+
+function exportReport() {
+    const blob = new Blob([results.join('\n')], {type: 'text/plain'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'reporte.txt';
+    link.click();
+}
+
+document.getElementById('start-test').addEventListener('click', runTests);
+document.getElementById('export-report').addEventListener('click', exportReport);
+</script>
 </body>
 </html>
