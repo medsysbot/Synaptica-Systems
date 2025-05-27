@@ -1,10 +1,10 @@
-requests
 fastapi
 uvicorn
+requests
+supabase
 python-dotenv
 fpdf
-email-validator
-supabase
-jinja2
-aiofiles
 httpx
+aiofiles
+jinja2
+email-validator
