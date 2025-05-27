@@ -22,24 +22,30 @@ Facilitar las pruebas automatizadas y manuales de los servicios de Synaptica Sys
 
 ## Variables de entorno
 
-Copiá el archivo `.env.example` a `.env` y completá los valores requeridos.
+Copiá el archivo `.env.example` a `.env` y completá los valores requeridos. El archivo contiene:
+
+```env
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+DATABASE_URL=postgresql://user:pass@localhost:5432/fake
+```
 
 ## Uso local
 
 Iniciá la aplicación con:
 ```bash
-uvicorn app.synaptica_main:saludo
+uvicorn app.synaptica_main:app --host 0.0.0.0 --port 7860
 ```
-Esto mostrará un mensaje de bienvenida básico.
+Luego ingresá en `http://localhost:7860/public/synaptica-tester.html` para ver la interfaz de prueba.
 
 ## Despliegue en Railway
 
 1. Crea un nuevo proyecto en [Railway](https://railway.app/).
 2. Sube el código de este repositorio.
 3. Configura las variables de entorno según tu `.env`.
-4. Utiliza un comando de inicio similar a:
+4. Railway utilizará el `Procfile` incluido, que ejecuta:
    ```bash
-   uvicorn app.synaptica_main:saludo --host 0.0.0.0 --port $PORT
+   uvicorn app.synaptica_main:app --host=0.0.0.0 --port=7860
    ```
 5. Despliega y verifica el servicio.
 
