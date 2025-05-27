@@ -23,27 +23,13 @@
 </head>
 <body>
     <h1>Tester Automático de Synaptica Systems</h1>
-    <label>URL de MedSys:
-        <input id="medsys-url" type="text" placeholder="https://midominio.com" size="40">
+    <label>URL de MedSys (sesión iniciada):
+        <input id="medsys-url" type="text" placeholder="https://midominio.com/index" size="40">
     </label>
-
-    <h2>Iniciar sesión</h2>
-    <label>Usuario:
-        <input id="usuario" type="text">
-    </label><br>
-    <label>Contraseña:
-        <input id="contrasena" type="password">
-    </label><br>
-    <label>Rol:
-        <select id="rol">
-            <option value="director">director</option>
-            <option value="profesional">profesional</option>
-        </select>
-    </label><br>
-    <button id="login-btn">Iniciar sesión</button>
-    <div id="login-message"></div>
+    <div id="session-message"></div>
 
     <button id="start-test">Iniciar Test</button>
+    <iframe id="medsys-frame" style="display:none;"></iframe>
 
     <h2>Resultado</h2>
     <div id="console"></div>
@@ -51,8 +37,8 @@
 
 <script>
 const consoleArea = document.getElementById('console');
+const iframe = document.getElementById('medsys-frame');
 let results = [];
-let loginSuccess = false;
 let baseUrl = '';
 
 function logResult(text) {
@@ -60,46 +46,29 @@ function logResult(text) {
     consoleArea.textContent += text + '\n';
 }
 
-async function login() {
-    baseUrl = document.getElementById('medsys-url').value.trim();
-    const usuario = document.getElementById('usuario').value.trim();
-    const contrasena = document.getElementById('contrasena').value;
-    const rol = document.getElementById('rol').value;
 
-    if (!baseUrl || !usuario || !contrasena || !rol) {
-        alert('Completá todos los campos de login');
-        return;
-    }
-
+async function checkSession(base) {
     try {
-        const datos = new FormData();
-        datos.append('usuario', usuario);
-        datos.append('contrasena', contrasena);
-        datos.append('rol', rol);
-
-        const resp = await fetch(baseUrl + '/login', {
-            method: 'POST',
-            body: datos,
-            credentials: 'include'
-        });
-        if (!resp.ok) throw new Error();
-        loginSuccess = true;
-        document.getElementById('login-message').textContent = '✅ Sesión iniciada correctamente';
-    } catch (err) {
-        loginSuccess = false;
-        document.getElementById('login-message').textContent = '❌ Error al iniciar sesión';
+        const resp = await fetch(base, { credentials: 'include' });
+        return resp.ok;
+    } catch {
+        return false;
     }
 }
 
 async function runTests() {
-    if (!loginSuccess) {
-        alert('Primero iniciá sesión');
-        return;
-    }
+    baseUrl = document.getElementById('medsys-url').value.trim();
     if (!baseUrl) {
         alert('Ingresá la URL de MedSys');
         return;
     }
+    iframe.src = baseUrl;
+    const logged = await checkSession(baseUrl);
+    if (!logged) {
+        document.getElementById('session-message').textContent = 'Debe iniciar sesión en otra pestaña antes de ejecutar las pruebas';
+        return;
+    }
+    document.getElementById('session-message').textContent = '';
     consoleArea.textContent = '';
     results = [];
     await testRegistro(baseUrl);
@@ -163,7 +132,6 @@ function exportReport() {
 
 document.getElementById('start-test').addEventListener('click', runTests);
 document.getElementById('export-report').addEventListener('click', exportReport);
-document.getElementById('login-btn').addEventListener('click', login);
 </script>
 </body>
 </html>
