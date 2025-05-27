@@ -26,6 +26,20 @@
     <label>URL de MedSys:
         <input id="medsys-url" type="text" placeholder="https://midominio.com" size="40">
     </label>
+
+    <h2>Iniciar sesión</h2>
+    <label>Usuario:
+        <input id="usuario" type="text">
+    </label><br>
+    <label>Contraseña:
+        <input id="contrasena" type="password">
+    </label><br>
+    <label>Rol:
+        <input id="rol" type="text">
+    </label><br>
+    <button id="login-btn">Iniciar sesión</button>
+    <div id="login-message"></div>
+
     <button id="start-test">Iniciar Test</button>
 
     <h2>Resultado</h2>
@@ -35,14 +49,46 @@
 <script>
 const consoleArea = document.getElementById('console');
 let results = [];
+let loginSuccess = false;
+let baseUrl = '';
 
 function logResult(text) {
     results.push(text);
     consoleArea.textContent += text + '\n';
 }
 
+async function login() {
+    baseUrl = document.getElementById('medsys-url').value.trim();
+    const usuario = document.getElementById('usuario').value.trim();
+    const contrasena = document.getElementById('contrasena').value;
+    const rol = document.getElementById('rol').value.trim();
+
+    if (!baseUrl || !usuario || !contrasena || !rol) {
+        alert('Completá todos los campos de login');
+        return;
+    }
+
+    try {
+        const resp = await fetch(baseUrl + '/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuario, contrasena, rol }),
+            credentials: 'include'
+        });
+        if (!resp.ok) throw new Error();
+        loginSuccess = true;
+        document.getElementById('login-message').textContent = '✅ Sesión iniciada correctamente';
+    } catch (err) {
+        loginSuccess = false;
+        document.getElementById('login-message').textContent = '❌ Error al iniciar sesión';
+    }
+}
+
 async function runTests() {
-    const baseUrl = document.getElementById('medsys-url').value.trim();
+    if (!loginSuccess) {
+        alert('Primero iniciá sesión');
+        return;
+    }
     if (!baseUrl) {
         alert('Ingresá la URL de MedSys');
         return;
@@ -59,7 +105,7 @@ async function runTests() {
 async function testRegistro(base) {
     try {
         logResult('Iniciando prueba de Registro...');
-        const resp = await fetch(base + '/registro');
+        const resp = await fetch(base + '/registro', { credentials: 'include' });
         if (!resp.ok) throw new Error('No se pudo acceder');
         logResult('\u2714\ufe0f Registro: OK');
     } catch (err) {
@@ -70,7 +116,7 @@ async function testRegistro(base) {
 async function testEvolucion(base) {
     try {
         logResult('Iniciando prueba de Evoluci\u00f3n...');
-        const resp = await fetch(base + '/evolucion');
+        const resp = await fetch(base + '/evolucion', { credentials: 'include' });
         if (!resp.ok) throw new Error('No se pudo acceder');
         logResult('\u2714\ufe0f Evoluci\u00f3n: OK');
     } catch (err) {
@@ -81,7 +127,7 @@ async function testEvolucion(base) {
 async function testHistoria(base) {
     try {
         logResult('Iniciando prueba de Historia...');
-        const resp = await fetch(base + '/historia');
+        const resp = await fetch(base + '/historia', { credentials: 'include' });
         if (!resp.ok) throw new Error('No se pudo acceder');
         logResult('\u2714\ufe0f Historia: OK');
     } catch (err) {
@@ -92,7 +138,7 @@ async function testHistoria(base) {
 async function testReceta(base) {
     try {
         logResult('Iniciando prueba de Receta...');
-        const resp = await fetch(base + '/receta');
+        const resp = await fetch(base + '/receta', { credentials: 'include' });
         if (!resp.ok) throw new Error('No se pudo acceder');
         logResult('\u2714\ufe0f Receta: OK');
     } catch (err) {
@@ -110,6 +156,7 @@ function exportReport() {
 
 document.getElementById('start-test').addEventListener('click', runTests);
 document.getElementById('export-report').addEventListener('click', exportReport);
+document.getElementById('login-btn').addEventListener('click', login);
 </script>
 </body>
 </html>
