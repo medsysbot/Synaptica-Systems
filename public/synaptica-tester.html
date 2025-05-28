@@ -242,11 +242,33 @@ function esperarCampo(doc, id, intento = 0) {
     });
 }
 
-async function cargarEnIframe(ruta) {
+// Carga una ruta en el iframe indicado y espera hasta que el documento
+// embebido esté disponible.
+async function cargarEnIframe(ruta, frameId = 'medsys-frame') {
     return new Promise((resolve, reject) => {
-        const frame = document.getElementById('medsys-frame');
-        frame.src = baseUrl + ruta;
-        frame.onload = () => resolve();
+        const frame = document.getElementById(frameId);
+        if (!frame) {
+            reject(new Error('Iframe no encontrado'));
+            return;
+        }
+        const url = baseUrl + ruta;
+        frame.onload = () => {
+            setTimeout(() => {
+                try {
+                    const doc = frame.contentWindow.document;
+                    if (frame.src !== url) {
+                        console.warn('La URL del iframe no coincide con la esperada:', frame.src);
+                    }
+                    if (doc.readyState !== 'complete') {
+                        console.log('Documento interno aún no está listo');
+                    }
+                    resolve();
+                } catch (err) {
+                    reject(err);
+                }
+            }, 300);
+        };
+        frame.src = url;
     });
 }
 
