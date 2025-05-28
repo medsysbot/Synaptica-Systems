@@ -242,8 +242,8 @@ function esperarCampo(doc, id, intento = 0) {
     });
 }
 
-// Carga una ruta en el iframe indicado y espera hasta que el documento
-// embebido esté disponible.
+// Carga una ruta en el iframe indicado y devuelve el documento interno
+// cuando su estado sea "complete".
 async function cargarEnIframe(ruta, frameId = 'medsys-frame') {
     return new Promise((resolve, reject) => {
         const frame = document.getElementById(frameId);
@@ -253,20 +253,23 @@ async function cargarEnIframe(ruta, frameId = 'medsys-frame') {
         }
         const url = baseUrl + ruta;
         frame.onload = () => {
-            setTimeout(() => {
+            const esperarDom = () => {
                 try {
                     const doc = frame.contentWindow.document;
                     if (frame.src !== url) {
                         console.warn('La URL del iframe no coincide con la esperada:', frame.src);
                     }
-                    if (doc.readyState !== 'complete') {
-                        console.log('Documento interno aún no está listo');
+                    if (doc.readyState === 'complete') {
+                        resolve(doc);
+                    } else {
+                        console.log('DOM aún no listo, reintentando...');
+                        setTimeout(esperarDom, 300);
                     }
-                    resolve();
                 } catch (err) {
                     reject(err);
                 }
-            }, 300);
+            };
+            setTimeout(esperarDom, 500); // espera extra para asegurar disponibilidad
         };
         frame.src = url;
     });
@@ -276,9 +279,7 @@ async function testRegistro() {
     try {
         logResult('Iniciando prueba de Registro...');
         if (!(await verificarSesionActiva())) return;
-        await cargarEnIframe('/registro.html');
-        const doc = document.getElementById('medsys-frame').contentDocument ||
-                    document.getElementById('medsys-frame').contentWindow.document;
+        const doc = await cargarEnIframe('/registro.html');
         const dni = await esperarCampo(doc, IDS.registro.dni);
         const nombres = await esperarCampo(doc, IDS.registro.nombres);
         dni.value = '12345678';
@@ -298,9 +299,7 @@ async function testEvolucion() {
     try {
         logResult('Iniciando prueba de Evoluci\u00f3n...');
         if (!(await verificarSesionActiva())) return;
-        await cargarEnIframe('/evolucion.html');
-        const doc = document.getElementById('medsys-frame').contentDocument ||
-                    document.getElementById('medsys-frame').contentWindow.document;
+        const doc = await cargarEnIframe('/evolucion.html');
         const diagnostico = await esperarCampo(doc, IDS.evolucion.diagnostico);
         diagnostico.value = 'Test automatizado';
         const guardar = await esperarCampo(doc, IDS.evolucion.guardar);
@@ -318,9 +317,7 @@ async function testHistoria() {
     try {
         logResult('Iniciando prueba de Historia...');
         if (!(await verificarSesionActiva())) return;
-        await cargarEnIframe('/historia-clinica-completa.html');
-        const doc = document.getElementById('medsys-frame').contentDocument ||
-                    document.getElementById('medsys-frame').contentWindow.document;
+        const doc = await cargarEnIframe('/historia-clinica-completa.html');
         const antecedentes = await esperarCampo(doc, IDS.historia.antecedentes_personales);
         antecedentes.value = 'Historia automatizada';
         const guardar = await esperarCampo(doc, IDS.historia.guardar);
@@ -338,9 +335,7 @@ async function testReceta() {
     try {
         logResult('Iniciando prueba de Receta...');
         if (!(await verificarSesionActiva())) return;
-        await cargarEnIframe('/receta.html');
-        const doc = document.getElementById('medsys-frame').contentDocument ||
-                    document.getElementById('medsys-frame').contentWindow.document;
+        const doc = await cargarEnIframe('/receta.html');
         const medicamentos = await esperarCampo(doc, IDS.receta.medicamentos);
         medicamentos.value = 'Paracetamol';
         const guardar = await esperarCampo(doc, IDS.receta.guardar);
@@ -358,9 +353,7 @@ async function testIndicaciones() {
     try {
         logResult('Iniciando prueba de Indicaciones...');
         if (!(await verificarSesionActiva())) return;
-        await cargarEnIframe('/indicaciones.html');
-        const doc = document.getElementById('medsys-frame').contentDocument ||
-                    document.getElementById('medsys-frame').contentWindow.document;
+        const doc = await cargarEnIframe('/indicaciones.html');
         const indicaciones = await esperarCampo(doc, IDS.indicaciones.indicaciones);
         indicaciones.value = 'Indicaciones automáticas';
         const guardar = await esperarCampo(doc, IDS.indicaciones.guardar);
@@ -378,9 +371,7 @@ async function testTurnos() {
     try {
         logResult('Iniciando prueba de Turnos...');
         if (!(await verificarSesionActiva())) return;
-        await cargarEnIframe('/turnos.html');
-        const doc = document.getElementById('medsys-frame').contentDocument ||
-                    document.getElementById('medsys-frame').contentWindow.document;
+        const doc = await cargarEnIframe('/turnos.html');
         const fecha = await esperarCampo(doc, IDS.turnos.fecha);
         fecha.value = '2024-01-01';
         const guardar = await esperarCampo(doc, IDS.turnos.guardar);
@@ -398,33 +389,11 @@ async function testBusqueda() {
     try {
         logResult('Iniciando prueba de Búsqueda...');
         if (!(await verificarSesionActiva())) return;
-        const iframe = document.getElementById('medsys-frame');
-        if (!iframe) throw new Error('Iframe no encontrado');
-
-        await new Promise((resolve, reject) => {
-            iframe.onload = () => {
-                try {
-                    const doc = iframe.contentWindow.document;
-                    const campo = doc.getElementById(IDS.busqueda.busqueda);
-                    if (!campo) {
-                        console.log('Campo de búsqueda no disponible aún');
-                        reject(new Error(`No se encontró el campo ${IDS.busqueda.busqueda}`));
-                        return;
-                    }
-                    campo.value = 'TEST';
-                    const enviar = doc.getElementById(IDS.busqueda.enviar);
-                    if (!enviar) {
-                        reject(new Error(`No se encontró el campo ${IDS.busqueda.enviar}`));
-                        return;
-                    }
-                    enviar.click();
-                    resolve();
-                } catch (err) {
-                    reject(err);
-                }
-            };
-            iframe.src = baseUrl + '/busqueda.html';
-        });
+        const doc = await cargarEnIframe('/busqueda.html');
+        const campo = await esperarCampo(doc, IDS.busqueda.busqueda);
+        campo.value = 'TEST';
+        const enviar = await esperarCampo(doc, IDS.busqueda.enviar);
+        enviar.click();
 
         await esperar(1000);
         logResult('\u2714\ufe0f Búsqueda: Ejecutada');
@@ -439,9 +408,7 @@ async function testEstudios() {
     try {
         logResult('Iniciando prueba de Estudios Médicos...');
         if (!(await verificarSesionActiva())) return;
-        await cargarEnIframe('/estudios-medicos.html');
-        const doc = document.getElementById('medsys-frame').contentDocument ||
-                    document.getElementById('medsys-frame').contentWindow.document;
+        const doc = await cargarEnIframe('/estudios-medicos.html');
         const tipoEstudio = await esperarCampo(doc, IDS.estudios.tipo_estudio);
         tipoEstudio.value = 'Laboratorio';
         const guardar = await esperarCampo(doc, IDS.estudios.guardar);
