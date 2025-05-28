@@ -94,6 +94,21 @@ async function esperar(ms) {
     return new Promise(r => setTimeout(r, ms));
 }
 
+function esperarCampo(doc, selector, intento = 0) {
+    return new Promise((resolve, reject) => {
+        const campo = doc.querySelector(selector);
+        if (campo) {
+            resolve(campo);
+        } else if (intento > 20) {
+            reject(new Error(`No se encontró el campo ${selector}`));
+        } else {
+            setTimeout(() => {
+                esperarCampo(doc, selector, intento + 1).then(resolve).catch(reject);
+            }, 300);
+        }
+    });
+}
+
 async function cargarEnIframe(ruta) {
     return new Promise((resolve, reject) => {
         const frame = document.getElementById('medsys-frame');
@@ -108,9 +123,12 @@ async function testRegistro() {
         await cargarEnIframe('/registro');
         const doc = document.getElementById('medsys-frame').contentDocument ||
                     document.getElementById('medsys-frame').contentWindow.document;
-        doc.querySelector('#dni').value = '12345678';
-        doc.querySelector('#nombre').value = 'TEST';
-        doc.querySelector('#guardar').click();
+        const dni = await esperarCampo(doc, '#dni');
+        const nombre = await esperarCampo(doc, '#nombre');
+        dni.value = '12345678';
+        nombre.value = 'TEST';
+        const guardar = await esperarCampo(doc, '#guardar');
+        guardar.click();
         await esperar(1000);
         logResult('\u2714\ufe0f Registro: OK');
     } catch (err) {
@@ -124,8 +142,10 @@ async function testEvolucion() {
         await cargarEnIframe('/evolucion');
         const doc = document.getElementById('medsys-frame').contentDocument ||
                     document.getElementById('medsys-frame').contentWindow.document;
-        doc.querySelector('#diagnostico').value = 'Test automatizado';
-        doc.querySelector('#guardar').click();
+        const diagnostico = await esperarCampo(doc, '#diagnostico');
+        diagnostico.value = 'Test automatizado';
+        const guardar = await esperarCampo(doc, '#guardar');
+        guardar.click();
         await esperar(1000);
         logResult('\u2714\ufe0f Evoluci\u00f3n: OK');
     } catch (err) {
@@ -139,8 +159,10 @@ async function testHistoria() {
         await cargarEnIframe('/historia');
         const doc = document.getElementById('medsys-frame').contentDocument ||
                     document.getElementById('medsys-frame').contentWindow.document;
-        doc.querySelector('#observaciones').value = 'Historia automatizada';
-        doc.querySelector('#guardar').click();
+        const obs = await esperarCampo(doc, '#observaciones');
+        obs.value = 'Historia automatizada';
+        const guardar = await esperarCampo(doc, '#guardar');
+        guardar.click();
         await esperar(1000);
         logResult('\u2714\ufe0f Historia: OK');
     } catch (err) {
@@ -154,8 +176,10 @@ async function testReceta() {
         await cargarEnIframe('/receta');
         const doc = document.getElementById('medsys-frame').contentDocument ||
                     document.getElementById('medsys-frame').contentWindow.document;
-        doc.querySelector('#medicacion').value = 'Paracetamol';
-        doc.querySelector('#guardar').click();
+        const medicacion = await esperarCampo(doc, '#medicacion');
+        medicacion.value = 'Paracetamol';
+        const guardar = await esperarCampo(doc, '#guardar');
+        guardar.click();
         await esperar(1000);
         logResult('\u2714\ufe0f Receta: OK');
     } catch (err) {
