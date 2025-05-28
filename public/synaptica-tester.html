@@ -398,13 +398,34 @@ async function testBusqueda() {
     try {
         logResult('Iniciando prueba de Búsqueda...');
         if (!(await verificarSesionActiva())) return;
-        await cargarEnIframe('/busqueda.html');
-        const doc = document.getElementById('medsys-frame').contentDocument ||
-                    document.getElementById('medsys-frame').contentWindow.document;
-        const busqueda = await esperarCampo(doc, IDS.busqueda.busqueda);
-        busqueda.value = 'TEST';
-        const enviar = await esperarCampo(doc, IDS.busqueda.enviar);
-        enviar.click();
+        const iframe = document.getElementById('medsys-frame');
+        if (!iframe) throw new Error('Iframe no encontrado');
+
+        await new Promise((resolve, reject) => {
+            iframe.onload = () => {
+                try {
+                    const doc = iframe.contentWindow.document;
+                    const campo = doc.getElementById(IDS.busqueda.busqueda);
+                    if (!campo) {
+                        console.log('Campo de búsqueda no disponible aún');
+                        reject(new Error(`No se encontró el campo ${IDS.busqueda.busqueda}`));
+                        return;
+                    }
+                    campo.value = 'TEST';
+                    const enviar = doc.getElementById(IDS.busqueda.enviar);
+                    if (!enviar) {
+                        reject(new Error(`No se encontró el campo ${IDS.busqueda.enviar}`));
+                        return;
+                    }
+                    enviar.click();
+                    resolve();
+                } catch (err) {
+                    reject(err);
+                }
+            };
+            iframe.src = baseUrl + '/busqueda.html';
+        });
+
         await esperar(1000);
         logResult('\u2714\ufe0f Búsqueda: Ejecutada');
         agregarResultado('Búsqueda', '✅ Ejecutada');
